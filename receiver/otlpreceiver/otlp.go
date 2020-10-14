@@ -51,6 +51,8 @@ type otlpReceiver struct {
 	startServerOnce sync.Once
 }
 
+var DefaultUnaryServerInterceptors []grpc.UnaryServerInterceptor
+
 // newOtlpReceiver just creates the OpenTelemetry receiver services. It is the caller's
 // responsibility to invoke the respective Start*Reception methods as well
 // as the various Stop*Reception methods to end it.
@@ -62,6 +64,9 @@ func newOtlpReceiver(cfg *Config) (*otlpReceiver, error) {
 		opts, err := cfg.GRPC.ToServerOption()
 		if err != nil {
 			return nil, err
+		}
+		if len(DefaultUnaryServerInterceptors) != 0 {
+			opts = append(opts, grpc.ChainUnaryInterceptor(DefaultUnaryServerInterceptors...))
 		}
 		r.serverGRPC = grpc.NewServer(opts...)
 	}
